@@ -36,6 +36,8 @@ def odef(t, x):
     mod = np.linalg.norm(v)
     return np.array([x[2], x[3], -R*mod*x[2], -R*mod*x[3] + g])
 
+
+
 alpha = np.array([0,0,100*np.cos(np.pi/4),100*np.sin(np.pi/4)])
 a = 0
 b = 10
@@ -125,7 +127,7 @@ print()
 print("EXERCICI 4")
 
 sol = scipy.integrate.solve_ivp(odef, (a, b), alpha, rtol=1e-9)
-sol2 = scipy.integrate.solve_ivp(odef, (a,b), alpha, rtol=1e-14)
+sol2 = scipy.integrate.solve_ivp(odef, (a,b), alpha, rtol=1e-13)
 
 #Calculem l'error
 Ea_sol = np.linalg.norm(sol.y[-1,0:2] - sol2.y[-1,0:2])
@@ -133,4 +135,45 @@ Er_sol = Ea_sol/np.linalg.norm(sol2.y[-1, 0:2])
 print("Error EULER amb 1e-9 rtol passos (Absolut i relatiu)", Ea_sol, Er_sol)
 print("El nombre d'avaluacions necessitat ha sigut:", sol.nfev)
 
+#%%
+
+#--- EXERCICI 5 ---
+def hit_ground(t, x):
+    return x[1] # Alçada
+hit_ground.direction = -1 # Quan passi de y positiva a 0
+def d5(e):
     
+    b = 100 #Esperem fins que caigui a terra
+    alpha2 = np.array([0,0,100*np.cos(e),100*np.sin(e)])
+    t_impacte = scipy.integrate.solve_ivp(odef, (a, b), alpha2, events=hit_ground, rtol=1e-9).t_events[0][0]
+    x_impacte = scipy.integrate.solve_ivp(odef, (a, b), alpha2, events=hit_ground, rtol=1e-9).y_events[0][0][0]
+    
+    return t_impacte, x_impacte
+#[0] event hitground
+#[0] primer cop que passa
+#[0] Volem la primera coordenada de la solució
+
+print()
+print("EXERCICI 5")
+
+print("Amb les condicions inicials del problema, el projectil arriba a l'instant i distància:", d5(np.pi/4), " segons i metres respectivament")
+
+#--- EXERCICI 6 ---
+
+print()
+print("EXERCICI 6")
+
+#Definim funcio que nomès retorni la coordenada x amb el paràmetre com un vector i restant 500 peruqè la funcio doni 0 quan fem 500m
+def d(e):
+    e = e[0]
+    b = 100 #Esperem fins que caigui a terra
+    alpha2 = np.array([0,0,100*np.cos(e),100*np.sin(e)])
+    x_impacte = scipy.integrate.solve_ivp(odef, (a, b), alpha2, events=hit_ground, rtol=1e-9).y_events[0][0][0]
+    
+    return x_impacte - 500
+
+sol = scipy.optimize.fsolve(d, np.pi/4)
+print("Amb l'angle:", sol, "el projectil tocarà a terra en els 500 metres de distància")
+
+
+#Hem trobat el zero de la funció d que és el que es demanava a l'exercici
